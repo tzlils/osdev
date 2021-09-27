@@ -39,14 +39,27 @@ add_custom_target( ISO
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
 set(CMAKE_C_FLAGS "\
---target=x86_64-pc-none-elf -march=x86-64 \
--mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 \
 -I. \
--Wall -Wextra -O2 -pipe \
--std=gnu99 -ffreestanding \
--fno-stack-protector -fpie")
+--target=x86_64-pc-none-elf \
+-march=x86-64 \
+-std=gnu99 \
+-mno-80387 \
+-mno-mmx \
+-mno-3dnow \
+-mno-sse \
+-mno-sse2 \
+-MMD \
+-Wall \
+-Wextra \
+-O2 \
+-pipe \
+-ffreestanding \
+-fno-stack-protector \
+-fpie")
 
 target_link_options(osdev PRIVATE "\
 SHELL:-T${LINKER_SCRIPT} \
--nostdlib -z max-page-size=0x1000 \
--static -fpie")
+-nostdlib \
+-z max-page-size=0x1000 \
+-static \
+-fpie")
