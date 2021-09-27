@@ -28,17 +28,18 @@ add_dependencies(osdev limine)
 target_include_directories(osdev PRIVATE ${CMAKE_SOURCE_DIR}/include /usr/include)
 set_target_properties(osdev PROPERTIES OUTPUT_NAME "osdev.elf")
 
-add_custom_target( ISO
-	OUTPUT ${CMAKE_SOURCE_DIR}/image.iso
-	COMMAND ${CMAKE_SOURCE_DIR}/build-iso.sh
+add_custom_target( ISO ALL
+	COMMAND ${CMAKE_SOURCE_DIR}/build-iso.sh &> /dev/null
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 	DEPENDS osdev
-	COMMENT "Building the ISO with limine"
-	VERBATIM
 )
+
+set(CMAKE_LINKER "ld.ldd")
+set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
 set(CMAKE_C_FLAGS "\
+-fuse-ld=lld \
 -I. \
 --target=x86_64-pc-none-elf \
 -march=x86-64 \
