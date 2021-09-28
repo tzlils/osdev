@@ -39,7 +39,6 @@ set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LI
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
 set(CMAKE_C_FLAGS "\
--fuse-ld=lld \
 -I. \
 --target=x86_64-pc-none-elf \
 -march=x86-64 \
@@ -49,7 +48,6 @@ set(CMAKE_C_FLAGS "\
 -mno-3dnow \
 -mno-sse \
 -mno-sse2 \
--MMD \
 -Wall \
 -Wextra \
 -O2 \
@@ -60,6 +58,8 @@ set(CMAKE_C_FLAGS "\
 
 target_link_options(osdev PRIVATE "\
 SHELL:-T${LINKER_SCRIPT} \
+-fuse-ld=lld \
+-MMD \
 -nostdlib \
 -z max-page-size=0x1000 \
 -static \

@@ -125,7 +125,7 @@ void _start(__attribute__ ((unused)) struct stivale2_struct *stivale2_struct) {
 	// a simple "Hello World" to screen.
 
 	char test_printf[256];
-	int bytes_written = vsnprintf(test_printf, 256, "Hello %s World %d", "FOO", 5);
+	int bytes_written = vsnprintf(test_printf, 256, "0x%x %d", 3735928559, 3735928559);
 	term_write(test_printf, bytes_written);
 	// We're done, just hang...
 	for (;;) {
