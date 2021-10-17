@@ -4,7 +4,10 @@
 
 #include <stdlib/stdio.h>
 #include <stdlib/string.h>
- 
+
+#define _STRINGIZE(x) #x
+#define STRINGIZE(x) _STRINGIZE(x)
+
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an uninitialised array in .bss.
 static uint8_t stack[8192];
@@ -97,7 +100,7 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
 	}
 }
 
-void _start(__attribute__ ((unused)) struct stivale2_struct *stivale2_struct) {
+void _start(struct stivale2_struct *stivale2_struct) {
 	// Let's get the terminal structure tag from the bootloader.
 	struct stivale2_struct_tag_terminal *term_str_tag;
 	term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
@@ -123,12 +126,17 @@ void _start(__attribute__ ((unused)) struct stivale2_struct *stivale2_struct) {
 
 	// We should now be able to call the above function pointer to print out
 	// a simple "Hello World" to screen.
+	char buffer[512];
+	int bytes_written = vsnprintf(
+		buffer, 512, "version %s built at %s\n\n",
+		STRINGIZE(BUILD_VERSION), BUILD_DATE
+	);
+	term_write(buffer, bytes_written);
 
 	const char* format = "vsnprintf test\n%%x: %x\n%%d: %d\n%%b: %b\n%%s: %s\n\nformat used:\n\n%s";
-	char test_printf[512];
-	int bytes_written = vsnprintf(test_printf, 512, format,
+	bytes_written = vsnprintf(buffer, 512, format,
 	3735928559, 3735928559, 3735928559, "FOOBAR", format);
-	term_write(test_printf, bytes_written);
+	term_write(buffer, bytes_written);
 	// We're done, just hang...
 	for (;;) {
 		asm ("hlt");
