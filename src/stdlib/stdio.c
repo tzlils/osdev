@@ -1,25 +1,30 @@
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib/stdio.h>
 
-void int_to_str(char * s, size_t n, int base, int64_t num) {
-	int length = 0;
+int int_to_str(char * s, size_t n, uint8_t base, int64_t num) {
+	size_t length = 0;
 	char number[70] = { 0 };
-	while (arg != 0) {
-		number[++length] =  "0123456789abcdef"[arg % base];
-		arg /= base;
+	while (num != 0) {
+		number[++length] =  "0123456789abcdef"[num % base];
+		num /= base;
 	}
 
-	while(int i = length; length > 0; length--) {
-		number[i] =  "0123456789abcdef"[arg % base];
-		if(idx > n) break;
+	size_t i = 0;
+	size_t j = 0;
+	for(j = length; j > 0; j--, i++) {
+		s[i] = number[j];
+		if(i > n) break;   
 	}
+
+	return length;
 }
 
 int vsnprintf(char * s, size_t n, const char* format, ...) {
 	int format_count = 0;
 	for(int i = 0; s[i] != 0; i++) {
-		if(s[i] == '%') format_count++;
+		if(s[i] == '%' && s[i+1] != '%') format_count++;
 	}
 	
 	va_list list;
@@ -32,9 +37,12 @@ int vsnprintf(char * s, size_t n, const char* format, ...) {
 		if(c != '%') {
 			s[++idx] = c;
 			continue;
-		};
+		}
+
 		c = *format++;
-		if(c == 's') {
+		if(c == '%') {
+			s[++idx] = c;
+		} else if(c == 's') {
 			char* arg = va_arg(list, char*);
 			char cur;
 			while((cur = *arg++) != 0) {
@@ -43,10 +51,16 @@ int vsnprintf(char * s, size_t n, const char* format, ...) {
 			}
 		} else if(c == 'd') {
 			int64_t arg = va_arg(list, int64_t);
-			int_to_str(s + idx, n - idx, 10, arg);
+			if(arg < 0) {
+				s[++idx] = '-';
+			}
+			idx += int_to_str(s + idx + 1, n - idx, 10, arg);
 		} else if(c == 'x') {
 			int64_t arg = va_arg(list, int64_t);
-			int_to_str(s + idx, n - idx, 16, arg);
+			idx += int_to_str(s + idx + 1, n - idx, 16, arg);
+		} else if(c == 'b') {
+			int64_t arg = va_arg(list, int64_t);
+			idx += int_to_str(s + idx + 1, n - idx, 2, arg);
 		}
 	}
 	s[++idx] = '\0';

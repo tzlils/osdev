@@ -124,8 +124,10 @@ void _start(__attribute__ ((unused)) struct stivale2_struct *stivale2_struct) {
 	// We should now be able to call the above function pointer to print out
 	// a simple "Hello World" to screen.
 
-	char test_printf[256];
-	int bytes_written = vsnprintf(test_printf, 256, "0x%x %d", 3735928559, 3735928559);
+	const char* format = "vsnprintf test\n%%x: %x\n%%d: %d\n%%b: %b\n%%s: %s\n\nformat used:\n\n%s";
+	char test_printf[512];
+	int bytes_written = vsnprintf(test_printf, 512, format,
+	3735928559, 3735928559, 3735928559, "FOOBAR", format);
 	term_write(test_printf, bytes_written);
 	// We're done, just hang...
 	for (;;) {
