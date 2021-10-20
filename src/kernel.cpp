@@ -5,8 +5,7 @@
 #include <stdlib/stdio.h>
 #include <stdlib/string.h>
 
-#define _STRINGIZE(x) #x
-#define STRINGIZE(x) _STRINGIZE(x)
+#include <mem/gdt.h>
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an uninitialised array in .bss.
@@ -81,7 +80,7 @@ static struct stivale2_header stivale_hdr = {
 // We will now write a helper function which will allow us to scan for tags
 // that we want FROM the bootloader (structure tags).
 void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
-	struct stivale2_tag *current_tag = (void *)stivale2_struct->tags;
+	struct stivale2_tag *current_tag = (struct stivale2_tag *)stivale2_struct->tags;
 	for (;;) {
 		// If the tag pointer is NULL (end of linked list), we did not find
 		// the tag. Return NULL to signal this.
@@ -96,17 +95,38 @@ void *stivale2_get_tag(struct stivale2_struct *stivale2_struct, uint64_t id) {
 		}
  
 		// Get a pointer to the next tag in the linked list and repeat.
-		current_tag = (void *)current_tag->next;
+		current_tag = (struct stivale2_tag *)current_tag->next;
 	}
 }
 
-void _start(struct stivale2_struct *stivale2_struct) {
+const uint64_t gdt_entries[9] = {
+	0x0000000000000000, // null
+	/*
+	note: should be able to get rid of {code,data}{16,32} once no longer using stivale terminal
+	*/
+	0x00009a000000ffff, // code16
+	0x000093000000ffff, // data16
+	0x00cf9a000000ffff, // code32
+	0x00cf93000000ffff, // data32
+	0x00af9b000000ffff, // code64
+	0x00af93000000ffff, // data64
+	0x00affb000000ffff, // usrc64
+	0x00aff3000000ffff  // usrd64
+};
+
+gdtr_t gdt = { sizeof(gdt_entries)-1, (uint64_t*)gdt_entries };
+
+#define _STRINGIFY(s) #s
+#define STRINGIFY(s) _STRINGIFY(s)
+
+[[noreturn]]
+extern "C" void _start(struct stivale2_struct *stivale2_struct) {
 	// Let's get the terminal structure tag from the bootloader.
 	struct stivale2_struct_tag_terminal *term_str_tag;
-	term_str_tag = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
+	term_str_tag = (struct stivale2_struct_tag_terminal*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_TERMINAL_ID);
 
 	struct stivale2_struct_tag_framebuffer *fb;
-    fb = stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);
+    fb = (struct stivale2_struct_tag_framebuffer *)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);
  
 	// Check if the tag was actually found.
 	if (term_str_tag == NULL || fb == NULL) {
@@ -122,16 +142,20 @@ void _start(struct stivale2_struct *stivale2_struct) {
 	// Now, let's assign this pointer to a function pointer which
 	// matches the prototype described in the stivale2 specification for
 	// the stivale2_term_write function.
-	void (*term_write)(const char *string, size_t length) = term_write_ptr;
+	typedef void write_func(const char*, size_t);
+	auto term_write = (write_func*)term_write_ptr;
 
 	// We should now be able to call the above function pointer to print out
 	// a simple "Hello World" to screen.
 	char buffer[512];
 	int bytes_written = vsnprintf(
 		buffer, 512, "version %s built at %s\n\n",
-		STRINGIZE(BUILD_VERSION), BUILD_DATE
+		STRINGIFY(BUILD_VERSION), BUILD_DATE
 	);
 	term_write(buffer, bytes_written);
+
+	term_write("Initializing GDT\n", 17);
+	set_gdt(&gdt);
 
 	const char* format = "vsnprintf test\n%%x: %x\n%%d: %d\n%%b: %b\n%%s: %s\n\nformat used:\n\n%s";
 	bytes_written = vsnprintf(buffer, 512, format,
