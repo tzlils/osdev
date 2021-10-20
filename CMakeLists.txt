@@ -42,7 +42,7 @@ set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET>
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
 set(SHARED_CXX_FLAGS "\
 -DBUILD_DATE=${BUILD_DATE} \
--DBUILD_VERSION=${CMAKE_PROJECT_VERSION} \
+-DBUILD_VERSION=\"${CMAKE_PROJECT_VERSION}\" \
 -I. \
 --target=x86_64-pc-none-elf \
 -march=x86-64 \
@@ -71,6 +71,8 @@ set(CMAKE_CXX_FLAGS " \
 ${SHARED_CXX_FLAGS} \
 -std=c++20 \
 -fmodules \
+-fmodules-ts \
+-fprebuilt-module-path=. \
 ")
 
 # needed to remove -rdynamic from link list

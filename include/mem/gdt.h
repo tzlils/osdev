@@ -11,4 +11,4 @@ typedef struct __attribute__((__packed__)) {
 	uint64_t* entries;
 } gdtr_t;
 
-void set_gdt(gdtr_t* gdt);
+void set_gdt(gdtr_t gdt);

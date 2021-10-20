@@ -6,6 +6,7 @@
 #include <stdlib/string.h>
 
 #include <mem/gdt.h>
+import cpuid;
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an uninitialised array in .bss.
@@ -116,9 +117,6 @@ const uint64_t gdt_entries[9] = {
 
 gdtr_t gdt = { sizeof(gdt_entries)-1, (uint64_t*)gdt_entries };
 
-#define _STRINGIFY(s) #s
-#define STRINGIFY(s) _STRINGIFY(s)
-
 [[noreturn]]
 extern "C" void _start(struct stivale2_struct *stivale2_struct) {
 	// Let's get the terminal structure tag from the bootloader.
@@ -150,12 +148,12 @@ extern "C" void _start(struct stivale2_struct *stivale2_struct) {
 	char buffer[512];
 	int bytes_written = vsnprintf(
 		buffer, 512, "version %s built at %s\n\n",
-		STRINGIFY(BUILD_VERSION), BUILD_DATE
+		BUILD_VERSION, BUILD_DATE
 	);
 	term_write(buffer, bytes_written);
 
 	term_write("Initializing GDT\n", 17);
-	set_gdt(&gdt);
+	set_gdt(gdt);
 
 	const char* format = "vsnprintf test\n%%x: %x\n%%d: %d\n%%b: %b\n%%s: %s\n\nformat used:\n\n%s";
 	bytes_written = vsnprintf(buffer, 512, format,

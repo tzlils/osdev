@@ -1,5 +1,6 @@
-%define PAGE_OFFSET 0x80000000
+%define PAGE_OFFSET 0x80000001
 
+global enable_paging
 section .text
 enable_paging:
 	push rbp
