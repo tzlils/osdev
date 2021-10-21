@@ -26,7 +26,7 @@ file(GLOB CXX_SRCS src/*.cpp src/*/*.cpp)
 file(GLOB S_SRCS src/*.nasm src/*/*.nasm)
 add_executable(osdev ${C_SRCS} ${S_SRCS} ${CXX_SRCS})
 add_dependencies(osdev limine)
-target_include_directories(osdev PRIVATE ${CMAKE_SOURCE_DIR}/include /usr/include)
+target_include_directories(osdev PRIVATE ${CMAKE_SOURCE_DIR}/include)
 set_target_properties(osdev PROPERTIES OUTPUT_NAME "osdev.elf")
 set_target_properties(osdev PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 
@@ -42,8 +42,7 @@ set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET>
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
 set(SHARED_CXX_FLAGS "\
 -DBUILD_DATE=${BUILD_DATE} \
--DBUILD_VERSION=\"${CMAKE_PROJECT_VERSION}\" \
--I. \
+-DBUILD_VERSION='\"${CMAKE_PROJECT_VERSION}\"' \
 --target=x86_64-pc-none-elf \
 -march=x86-64 \
 -mno-80387 \
@@ -71,9 +70,7 @@ set(CMAKE_CXX_FLAGS " \
 ${SHARED_CXX_FLAGS} \
 -std=c++20 \
 -fmodules \
--fmodules-ts \
--fprebuilt-module-path=. \
-")
+-fmodules-ts")
 
 # needed to remove -rdynamic from link list
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
