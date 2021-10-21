@@ -25,6 +25,54 @@ int int_to_str(char *s, size_t n, uint8_t base, int64_t num)
 	return length;
 }
 
+template <uint64_t n>
+int format(char *out, size_t max_size)
+{
+	return int_to_str(out, max_size, 10, n);
+}
+
+template <typename T>
+int format_arg(const T &arg, size_t max_size)
+{
+	return format<T>(arg, max_size);
+}
+
+template <typename... Args>
+int snprintf(char *out, int max_size, const char *format, Args &&...args)
+{
+	size_t idx = 0;
+	const auto handle_arg = [&](auto &arg)
+	{
+		while (*format)
+		{
+			if (*format == '\\')
+			{
+				out[++idx] = '\\';
+				format += 2;
+				continue;
+			}
+			if (*format != '{')
+			{
+				out[++idx] = *format++;
+				continue;
+			}
+
+			while (*format != '}')
+			{
+				idx += format_arg(arg, max_size);
+			}
+		}
+	}
+
+	(handle_arg(args), ...);
+	while (*format)
+	{
+		out[++idx] = *format++;
+	}
+	return idx;
+}
+
+/*
 int vsnprintf(char *s, size_t max_size, const char *format, ...)
 {
 	int format_count = 0;
@@ -51,9 +99,7 @@ int vsnprintf(char *s, size_t max_size, const char *format, ...)
 
 		c = *format++;
 
-		/*
-			handle length formats like %.16s
-		*/
+		// handle length formats like %.16s
 		size_t format_length = 0;
 		if (c == '.')
 		{
@@ -110,3 +156,4 @@ int vsnprintf(char *s, size_t max_size, const char *format, ...)
 	va_end(list);
 	return idx;
 }
+*/

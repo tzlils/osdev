@@ -147,24 +147,24 @@ gdtr_t gdt = {sizeof(gdt_entries) - 1, (uint64_t *)gdt_entries};
 	// a simple "Hello World" to screen.
 	char buffer[512];
 	int bytes_written = 0;
-	bytes_written = vsnprintf(
+	bytes_written = snprintf(
 		buffer, 512, "version %s built at %s\n\n",
 		BUILD_VERSION, BUILD_DATE);
 	term_write(buffer, bytes_written);
 
-	char cpuid_vendor[16];
-	cpuid_string(0, (uint32_t *)cpuid_vendor);
-	bytes_written = vsnprintf(
-		buffer, 512, "CPUID vendor: %s\n", cpuid_vendor);
-	term_write(buffer, bytes_written);
+	// char cpuid_vendor[16];
+	// cpuid_string(0, (uint32_t *)cpuid_vendor);
+	// bytes_written = vsnprintf(
+	// 	buffer, 512, "CPUID vendor: %s\n", cpuid_vendor);
+	// term_write(buffer, bytes_written);
 
-	term_write("Initializing GDT\n", 17);
-	set_gdt(gdt);
+	// term_write("Initializing GDT\n", 17);
+	// set_gdt(gdt);
 
-	const char *format = "vsnprintf test\n%%x: %x\n%%d: %d\n%%b: %b\n%%s: %s\n\nformat used:\n\n%s";
-	bytes_written = vsnprintf(buffer, 512, format,
-							  3735928559, 3735928559, 3735928559, "FOOBAR", format);
-	term_write(buffer, bytes_written);
+	// const char *format = "vsnprintf test\n%%x: %x\n%%d: %d\n%%b: %b\n%%s: %s\n\nformat used:\n\n%s";
+	// bytes_written = vsnprintf(buffer, 512, format,
+	// 						  3735928559, 3735928559, 3735928559, "FOOBAR", format);
+	// term_write(buffer, bytes_written);
 	// We're done, just hang...
 	for (;;)
 	{
