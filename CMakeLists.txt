@@ -26,7 +26,7 @@ file(GLOB CXX_SRCS src/*.cpp src/*/*.cpp)
 file(GLOB S_SRCS src/*.nasm src/*/*.nasm)
 add_executable(osdev ${C_SRCS} ${S_SRCS} ${CXX_SRCS})
 add_dependencies(osdev limine)
-target_include_directories(osdev PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(osdev PRIVATE /usr/include ${CMAKE_SOURCE_DIR}/include)
 set_target_properties(osdev PROPERTIES OUTPUT_NAME "osdev.elf")
 set_target_properties(osdev PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
 

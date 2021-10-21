@@ -5,7 +5,7 @@
  *  note that even if only "eax" and "edx" are of interest, other registers
  *  will be modified by the operation, so we need to tell the compiler about it.
  */
-static inline void cpuid(int code, uint32_t *a, uint32_t *d)
+void cpuid(int code, uint32_t *a, uint32_t *d)
 {
 	asm volatile("cpuid"
 				 : "=a"(*a), "=d"(*d)
@@ -15,7 +15,7 @@ static inline void cpuid(int code, uint32_t *a, uint32_t *d)
 
 /** issue a complete request, storing general registers output as a string
  */
-static inline int cpuid_string(int code, uint32_t where[4])
+int cpuid_string(int code, uint32_t where[4])
 {
 	asm volatile("cpuid"
 				 : "=a"(*where), "=b"(*(where + 1)),

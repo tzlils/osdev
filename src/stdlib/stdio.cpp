@@ -25,7 +25,7 @@ int int_to_str(char *s, size_t n, uint8_t base, int64_t num)
 	return length;
 }
 
-int vsnprintf(char *s, size_t n, const char *format, ...)
+int vsnprintf(char *s, size_t max_size, const char *format, ...)
 {
 	int format_count = 0;
 	for (int i = 0; s[i] != 0; i++)
@@ -41,7 +41,7 @@ int vsnprintf(char *s, size_t n, const char *format, ...)
 	size_t idx = 0;
 	while ((c = *format++) != 0)
 	{
-		if (idx > n)
+		if (idx > max_size)
 			break;
 		if (c != '%')
 		{
@@ -50,6 +50,26 @@ int vsnprintf(char *s, size_t n, const char *format, ...)
 		}
 
 		c = *format++;
+
+		/*
+			handle length formats like %.16s
+		*/
+		size_t format_length = 0;
+		if (c == '.')
+		{
+			c = *format++;
+			while ((c >= 48) && (c <= 57))
+			{
+				format_length = format_length * 10 + (c - '0');
+				c = *format++;
+			}
+			format_length += idx - 1;
+		}
+		else
+		{
+			format_length = max_size;
+		}
+
 		if (c == '%')
 		{
 			s[++idx] = c;
@@ -61,7 +81,7 @@ int vsnprintf(char *s, size_t n, const char *format, ...)
 			while ((cur = *arg++) != 0)
 			{
 				s[++idx] = cur;
-				if (idx > n)
+				if (idx > format_length)
 					break;
 			}
 		}
@@ -72,17 +92,17 @@ int vsnprintf(char *s, size_t n, const char *format, ...)
 			{
 				s[++idx] = '-';
 			}
-			idx += int_to_str(s + idx + 1, n - idx, 10, arg);
+			idx += int_to_str(s + idx + 1, format_length - idx, 10, arg);
 		}
 		else if (c == 'x')
 		{
 			int64_t arg = va_arg(list, int64_t);
-			idx += int_to_str(s + idx + 1, n - idx, 16, arg);
+			idx += int_to_str(s + idx + 1, format_length - idx, 16, arg);
 		}
 		else if (c == 'b')
 		{
 			int64_t arg = va_arg(list, int64_t);
-			idx += int_to_str(s + idx + 1, n - idx, 2, arg);
+			idx += int_to_str(s + idx + 1, format_length - idx, 2, arg);
 		}
 	}
 	s[++idx] = '\0';

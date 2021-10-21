@@ -153,9 +153,10 @@ gdtr_t gdt = {sizeof(gdt_entries) - 1, (uint64_t *)gdt_entries};
 	term_write(buffer, bytes_written);
 
 	char cpuid_vendor[16];
-	cpuid_string(1, (uint32_t *)cpuid_vendor);
+	cpuid_string(0, (uint32_t *)cpuid_vendor);
 	bytes_written = vsnprintf(
-		buffer, 512, "CPUID vendor: %s\n", );
+		buffer, 512, "CPUID vendor: %s\n", cpuid_vendor);
+	term_write(buffer, bytes_written);
 
 	term_write("Initializing GDT\n", 17);
 	set_gdt(gdt);
