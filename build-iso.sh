@@ -1,3 +1,4 @@
+#!/bin/sh
 # Create a directory which will be our ISO root.
 ISO_ROOT=`mktemp -d`
 
