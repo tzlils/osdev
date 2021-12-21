@@ -3,7 +3,7 @@
 ISO_ROOT=`mktemp -d`
 
 function cleanup {      
-	rm -rf "$WORK_DIR"
+	rm -rf "$ISO_ROOT"
 }
 
 trap cleanup EXIT
