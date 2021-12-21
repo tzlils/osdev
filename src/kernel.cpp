@@ -145,12 +145,12 @@ gdtr_t gdt = {sizeof(gdt_entries) - 1, (uint64_t *)gdt_entries};
 
 	// We should now be able to call the above function pointer to print out
 	// a simple "Hello World" to screen.
-	char buffer[512];
+	char buffer[512] = "Hello World";
 	int bytes_written = 0;
-	bytes_written = snprintf(
-		buffer, 512, "version %s built at %s\n\n",
-		BUILD_VERSION, BUILD_DATE);
-	term_write(buffer, bytes_written);
+	// bytes_written = snprintf(
+	// 	buffer, 512, "version % built at %",
+	// 	BUILD_VERSION, BUILD_DATE);
+	term_write(buffer, 512);
 
 	// char cpuid_vendor[16];
 	// cpuid_string(0, (uint32_t *)cpuid_vendor);

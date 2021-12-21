@@ -25,135 +25,54 @@ int int_to_str(char *s, size_t n, uint8_t base, int64_t num)
 	return length;
 }
 
-template <uint64_t n>
-int format(char *out, size_t max_size)
+template<class T> size_t specialized_printer(char* out, size_t max_size, T in)
 {
-	return int_to_str(out, max_size, 10, n);
+	return specialized_printer(out, max_size, "{I DON'T KNOW THIS TYPE}");
+};
+
+template<> size_t specialized_printer<const char*>(char* out, size_t max_size, const char* in) {
+	size_t i = 0;
+	for(; i < max_size && in[i] != '\0'; i++) {
+		out[i] = in[i];
+	}
+	return i;
 }
 
-template <typename T>
-int format_arg(const T &arg, size_t max_size)
-{
-	return format<T>(arg, max_size);
+template<> size_t specialized_printer<char*>(char* out, size_t max_size, char* in) {
+	return specialized_printer(out, max_size, (const char*)in);
 }
 
-template <typename... Args>
-int snprintf(char *out, int max_size, const char *format, Args &&...args)
-{
-	size_t idx = 0;
-	const auto handle_arg = [&](auto &arg)
-	{
-		while (*format)
-		{
-			if (*format == '\\')
-			{
-				out[++idx] = '\\';
-				format += 2;
-				continue;
-			}
-			if (*format != '{')
-			{
-				out[++idx] = *format++;
-				continue;
-			}
-
-			while (*format != '}')
-			{
-				idx += format_arg(arg, max_size);
-			}
-		}
-	}
-
-	(handle_arg(args), ...);
-	while (*format)
-	{
-		out[++idx] = *format++;
-	}
-	return idx;
+template<> size_t specialized_printer<int>(char* out, size_t max_size, int in)  {
+	return int_to_str(out, max_size, 10, in);
 }
 
-/*
-int vsnprintf(char *s, size_t max_size, const char *format, ...)
-{
-	int format_count = 0;
-	for (int i = 0; s[i] != 0; i++)
-	{
-		if (s[i] == '%' && s[i + 1] != '%')
-			format_count++;
-	}
-
-	va_list list;
-	va_start(list, format_count);
-
-	char c;
-	size_t idx = 0;
-	while ((c = *format++) != 0)
-	{
-		if (idx > max_size)
-			break;
-		if (c != '%')
-		{
-			s[++idx] = c;
-			continue;
-		}
-
-		c = *format++;
-
-		// handle length formats like %.16s
-		size_t format_length = 0;
-		if (c == '.')
-		{
-			c = *format++;
-			while ((c >= 48) && (c <= 57))
-			{
-				format_length = format_length * 10 + (c - '0');
-				c = *format++;
-			}
-			format_length += idx - 1;
-		}
-		else
-		{
-			format_length = max_size;
-		}
-
-		if (c == '%')
-		{
-			s[++idx] = c;
-		}
-		else if (c == 's')
-		{
-			char *arg = va_arg(list, char *);
-			char cur;
-			while ((cur = *arg++) != 0)
-			{
-				s[++idx] = cur;
-				if (idx > format_length)
-					break;
-			}
-		}
-		else if (c == 'd')
-		{
-			int64_t arg = va_arg(list, int64_t);
-			if (arg < 0)
-			{
-				s[++idx] = '-';
-			}
-			idx += int_to_str(s + idx + 1, format_length - idx, 10, arg);
-		}
-		else if (c == 'x')
-		{
-			int64_t arg = va_arg(list, int64_t);
-			idx += int_to_str(s + idx + 1, format_length - idx, 16, arg);
-		}
-		else if (c == 'b')
-		{
-			int64_t arg = va_arg(list, int64_t);
-			idx += int_to_str(s + idx + 1, format_length - idx, 2, arg);
-		}
-	}
-	s[++idx] = '\0';
-
-	va_end(list);
-	return idx;
+template<> size_t specialized_printer<bool>(char* out, size_t max_size, bool in) {
+	return specialized_printer(out, max_size, in ? "true" : "false");
 }
-*/
+
+template<class ...Ts> 
+size_t snprintf(char out[], size_t max_size, const char* format, Ts... args) {
+	size_t index = 0;
+	size_t fmt_index = 0;
+	auto printer = [&](auto arg) {
+		if(index >= max_size) return;
+		for(; format[fmt_index] != '\0'; fmt_index++) {
+			if(format[fmt_index] == '%') {
+				fmt_index++;
+				break;
+			};
+			out[++index] = format[fmt_index];
+		}
+
+		size_t size = specialized_printer(out+index, max_size-index, arg);
+		index += size;
+		return;
+	};
+
+	((printer(args)), ...);
+	for(; format[fmt_index] != '\0'; fmt_index++) {
+		out[index++] = format[fmt_index];
+	}
+	out[index] = '\0';
+	return index;
+}
