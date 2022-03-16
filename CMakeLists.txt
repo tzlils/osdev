@@ -1,14 +1,13 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.13.0)
+
+if(NOT CMAKE_TOOLCHAIN_FILE)
+	set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchains/x86-64.cmake)
+endif()
 
 project(osdev
 LANGUAGES C ASM_NASM CXX
 VERSION 1.0.0)
 
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_ASM_NASM_COMPILER nasm)
-
-set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
 set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/src/linker.ld)
 
 string(TIMESTAMP BUILD_DATE '"%Y-%m-%d %H:%M"')
@@ -37,45 +36,25 @@ add_custom_target( ISO ALL
 	BYPRODUCTS ${CMAKE_BINARY_DIR}/image.iso
 )
 
+#set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
+target_compile_options(osdev PUBLIC 
+ $<$<COMPILE_LANGUAGE:CXX>:-DBUILD_DATE=${BUILD_DATE}
+-DBUILD_VERSION='\"${CMAKE_PROJECT_VERSION}\"'
+-Wall
+-Wextra
+-ffreestanding
+-fno-stack-protector
+-fno-stack-check
+-fpie
+-Xclang
+-Wno-varargs
+-fcolor-diagnostics>)
+
+target_compile_features(osdev
+	PUBLIC
+		cxx_std_20
+		c_std_99
+)
+
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -f elf64 -o <OBJECT> <SOURCE>")
-set(SHARED_CXX_FLAGS "\
--DBUILD_DATE=${BUILD_DATE} \
--DBUILD_VERSION='\"${CMAKE_PROJECT_VERSION}\"' \
---target=x86_64-pc-none-elf \
--march=x86-64 \
--mno-80387 \
--mno-mmx \
--mno-3dnow \
--mno-sse \
--mno-sse2 \
--Wall \
--Wextra \
--O2 \
--pipe \
--ffreestanding \
--fno-stack-protector \
--fpie \
--Xclang \
--Wno-varargs \
--fcolor-diagnostics")
-
-set(CMAKE_C_FLAGS " \
-${SHARED_CXX_FLAGS} \
--std=gnu99 \
-")
-
-set(CMAKE_CXX_FLAGS " \
-${SHARED_CXX_FLAGS} \
--std=c++20 \
--fmodules \
--fmodules-ts")
-
-# needed to remove -rdynamic from link list
-set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
-set(CMAKE_EXE_LINKER_FLAGS "\
--T${LINKER_SCRIPT} \
--nostdlib \
--z max-page-size=0x1000 \
--static \
--pie")
+target_link_options(osdev PRIVATE -T${LINKER_SCRIPT} -nostdlib)
